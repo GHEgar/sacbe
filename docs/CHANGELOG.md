@@ -4,7 +4,7 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
-## [No publicado]
+## [3.0.0-1] - 2026-10-13
 
 ### Agregado
 
