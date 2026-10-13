@@ -1,0 +1,6 @@
+2f13e8fe500a430cc98ce18055a8e7a4983a5311b9fcf5af6600bff3305ddd56  geoserver-3.0.0-war.zip
+8e6e4bea9e749ac641aad53f733a0effd2792543ad2c921ba3dc7de59aca0a0a  geoserver-3.0.0-control-flow-plugin.zip
+40694356c963de16bb166c0c31b6dc057201c424ebab442369f8f86d667798bc  geoserver-3.0.0-wps-plugin.zip
+b763248cf13e66678cae456f64c8e93c4e5762aebe7a9ce01cab67f408fc7263  geoserver-3.0.0-vectortiles-plugin.zip
+1844b30354b7d635d4be65b84876db1fd3247aaf90cdb43af54cdbf6dd9edeb5  geoserver-3.0.0-geopkg-output-plugin.zip
+69e0a86c1d1f796af3bb755a40fd79f537ed699ca2200fdbbb0beb3e0ff16c42  geoserver-3.0.0-libjpeg-turbo-plugin.zip
