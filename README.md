@@ -9,7 +9,7 @@ variables, a read-only overlay copied into the data directory, and a read-only f
 docker run -d -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v ./data_dir:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.0-1
+    ghcr.io/ghegar/sacbe:3.0.1-1
 ```
 
 The bind-mounted data directory must be writable by uid 2000.
@@ -18,15 +18,15 @@ The bind-mounted data directory must be writable by uid 2000.
 
 | Piece | Version |
 |---|---|
-| GeoServer | 3.0.0, official WAR with checksums pinned in `sha256sums.txt` |
-| Base image | `tomcat:11.0.24-jdk21-temurin-noble`, pinned by digest |
+| GeoServer | 3.0.1, official WAR with checksums pinned in `sha256sums.txt` |
+| Base image | `tomcat:11.0.27-jdk21-temurin-noble`, pinned by digest |
 | Extensions | control-flow, wps, vectortiles, geopkg-output, libjpeg-turbo (native library included) |
 | Removed from the WAR | web-demo, sec-jdbc, sec-ldap |
 | User | `geoserveruser:geoserverusers`, uid and gid 2000 |
 
 The WPS extension brings `gs-kml` as a dependency of `gs-wps-kml-ppio`, so KML output is available.
 
-Image tags follow `<geoserver-version>-<revision>`: `3.0.0-1` is the first build of GeoServer 3.0.0.
+Image tags follow `<geoserver-version>-<revision>`: `3.0.1-1` is the first build of GeoServer 3.0.1.
 No moving tags are published.
 
 ## Configuration
@@ -96,7 +96,10 @@ docker build --build-arg GS_PLUGINS="control-flow wps" -t sacbe .
 
 Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
 
+CI blocks the push on any fixable CRITICAL vulnerability. `.trivyignore` lists the ones that come
+from libraries inside the upstream WAR, each with an expiry date so they get reviewed.
+
 ## License
 
 GPL-2.0-or-later, the same terms as GeoServer, which this image redistributes. The upstream source of
-the bundled GeoServer build is at <https://github.com/geoserver/geoserver/tree/3.0.0>.
+the bundled GeoServer build is at <https://github.com/geoserver/geoserver/tree/3.0.1>.

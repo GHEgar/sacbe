@@ -1,9 +1,9 @@
-ARG TOMCAT_IMAGE=tomcat:11.0.24-jdk21-temurin-noble@sha256:7e6712756c721966f4157f53794a5507398e9020a3dec86e086475503aa7b57f
+ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk21-temurin-noble@sha256:05532a690ebbdf637fc3936698b274febc15f7f41d376d41f15999d2f4af1a71
 ARG FETCH_IMAGE=debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
 
 FROM ${FETCH_IMAGE} AS fetch
 
-ARG GS_VERSION=3.0.0
+ARG GS_VERSION=3.0.1
 ARG GS_PLUGINS="control-flow wps vectortiles geopkg-output libjpeg-turbo"
 ARG GS_MIRROR=https://downloads.sourceforge.net/project/geoserver/GeoServer
 ARG GS_DROP_JARS="gs-web-demo gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap"
@@ -32,7 +32,7 @@ RUN set -eu; \
 
 FROM ${TOMCAT_IMAGE}
 
-ARG GS_VERSION=3.0.0
+ARG GS_VERSION=3.0.1
 ARG GS_UID=2000
 ARG GS_GID=2000
 ARG REVISION=unknown

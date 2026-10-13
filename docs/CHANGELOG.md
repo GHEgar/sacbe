@@ -4,11 +4,11 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
-## [3.0.0-1] - 2026-10-13
+## [3.0.1-1] - 2026-10-13
 
 ### Agregado
 
-- Imagen de GeoServer 3.0.0 sobre `tomcat:11.0.24-jdk21-temurin-noble` fijada por digest, con el
+- Imagen de GeoServer 3.0.1 sobre `tomcat:11.0.27-jdk21-temurin-noble` fijada por digest, con el
   WAR oficial y las extensiones control-flow, wps, vectortiles, geopkg-output y libjpeg-turbo,
   verificadas por sha256.
 - Usuario `geoserveruser` (uid y gid 2000) desde el build: el arranque no hace `chown`.
@@ -20,6 +20,7 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 - Fuentes desde `/etc/geoserver/fonts` registradas en fontconfig.
 - Siembra del admin en un data_dir vacío y comando `geoserver-reset-admin`.
 - Workflow que construye, prueba, escanea y publica en `ghcr.io/ghegar/sacbe` al etiquetar `v*`.
+- `.trivyignore` con las cuatro CVE CRITICAL que GeoServer 3.0.1 aún arrastra (bouncycastle, freemarker y dos de spring-webmvc), con expiración al 2027-01-13.
 
 ### Eliminado
 
