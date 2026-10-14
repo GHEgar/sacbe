@@ -1,9 +1,61 @@
-# sacbe
+# <picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/icon-dark.svg"><img src=".github/assets/icon-light.svg" width="36" height="36" alt=""></picture> sacbe
 
-Minimal Docker image for [GeoServer](https://geoserver.org). It is built from the official WAR and a
-short list of extensions. It runs as a non-root user from the first instruction, so startup never
-does a recursive `chown`. Site configuration is not baked in: it comes in through environment
+[![image](https://img.shields.io/github/v/tag/GHEgar/sacbe?label=ghcr.io)](https://github.com/GHEgar/sacbe/pkgs/container/sacbe)
+[![license](https://img.shields.io/github/license/GHEgar/sacbe)](LICENSE)
+
+Minimal GeoServer image: official WAR, chosen plugins, non-root, no chown at startup
+
+sacbe is a minimal Docker image for [GeoServer](https://geoserver.org). It is built from the official
+WAR and a short list of extensions. It runs as a non-root user from the first instruction, so startup
+never does a recursive `chown`. Site configuration is not baked in: it comes in through environment
 variables, a read-only overlay copied into the data directory, and a read-only fonts directory.
+
+## Install
+
+```bash
+docker pull ghcr.io/ghegar/sacbe:3.0.1-1
+```
+
+Or build it from this repository:
+
+```bash
+docker build -t sacbe .
+docker build --build-arg GS_PLUGINS="control-flow wps" -t sacbe .
+```
+
+| Entry | What it is | Needs |
+|---|---|---|
+| `8080` | Tomcat HTTP connector, GeoServer at `/<GEOSERVER_CONTEXT>/` | nothing |
+| `/opt/geoserver/data_dir` | GeoServer data directory (`GEOSERVER_DATA_DIR`) | writable by uid 2000 |
+| `/opt/geoserver/gwc_cache` | GeoWebCache tile cache (`GEOWEBCACHE_CACHE_DIR`) | writable by uid 2000 |
+| `/etc/geoserver/overlay` | Files copied into the data directory on every start | read-only is fine |
+| `/etc/geoserver/fonts` | `.ttf`, `.otf` and `.ttc` fonts for rendering | read-only is fine |
+
+Build arguments:
+
+| Argument | Default | Effect |
+|---|---|---|
+| `GS_VERSION` | `3.0.1` | GeoServer release to download |
+| `GS_PLUGINS` | `control-flow wps vectortiles geopkg-output libjpeg-turbo` | Extensions unzipped into `WEB-INF/lib` |
+| `GS_DROP_JARS` | `gs-web-demo gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap` | Jars removed from the WAR |
+| `GS_MIRROR` | SourceForge GeoServer project | Download base URL |
+| `GS_UID`, `GS_GID` | `2000`, `2000` | Runtime user and group |
+| `TOMCAT_IMAGE`, `FETCH_IMAGE` | Tomcat 11.0.27 JDK 21 and Debian trixie-slim, pinned by digest | Final and download stages |
+| `REVISION` | `unknown` | `org.opencontainers.image.revision` label |
+
+Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
+
+## Quick start
+
+```bash
+docker run -d --name geoserver -p 8080:8080 \
+    -e GEOSERVER_ADMIN_PASSWORD=change-me \
+    -v geoserver-data:/opt/geoserver/data_dir \
+    ghcr.io/ghegar/sacbe:3.0.1-1
+```
+
+Open <http://localhost:8080/geoserver/web/> and log in as `admin` / `change-me`. A named volume takes
+its ownership from the image; a bind-mounted data directory must be writable by uid 2000:
 
 ```bash
 docker run -d -p 8080:8080 \
@@ -11,8 +63,6 @@ docker run -d -p 8080:8080 \
     -v ./data_dir:/opt/geoserver/data_dir \
     ghcr.io/ghegar/sacbe:3.0.1-1
 ```
-
-The bind-mounted data directory must be writable by uid 2000.
 
 ## What is inside
 
@@ -87,19 +137,39 @@ docker restart <container>
 
 The hash uses the Jasypt digest that GeoServer ships (`digest1:`, SHA-256, 100000 iterations).
 
-## Build
+## Known limitations
+
+- Only `linux/amd64` is published.
+- GDAL is not included. Run `gdalwarp` and friends from a separate `ghcr.io/osgeo/gdal` container.
+- The healthcheck requests `/<context>/web/`. With `GEOSERVER_CONSOLE_DISABLED=true`, override it with
+  `--health-cmd` or a compose `healthcheck`.
+- Admin seeding only happens when the data directory has no `security/` and `GEOSERVER_ADMIN_PASSWORD`
+  is set; an existing data directory keeps its users.
+
+## Development
 
 ```bash
-docker build -t sacbe .
-docker build --build-arg GS_PLUGINS="control-flow wps" -t sacbe .
+docker build -t sacbe:dev .
+sh smoke.sh sacbe:dev
+docker run --rm -p 8080:8080 -e GEOSERVER_ADMIN_PASSWORD=x sacbe:dev
 ```
 
-Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
+`smoke.sh` starts the image on port 18080 (`SMOKE_PORT`) and checks that it runs as uid 2000, answers
+WMS, WFS, WCS, WPS and WMTS GetCapabilities, offers GeoPackage and vector tile output, accepts REST
+calls with the seeded admin, and never logs a `chown`.
 
-CI blocks the push on any fixable CRITICAL vulnerability. `.trivyignore` lists the ones that come
-from libraries inside the upstream WAR, each with an expiry date so they get reviewed.
+Pushing a `v<geoserver-version>-<revision>` tag runs the CI workflow: build, smoke test, Trivy scan, and
+push to `ghcr.io/ghegar/sacbe` with SBOM and provenance. CI blocks the push on any fixable CRITICAL
+vulnerability. `.trivyignore` lists the ones that come from libraries inside the upstream WAR, each
+with an expiry date so they get reviewed.
+
+## Contributing
+
+Issues are welcome. Open one before sending a pull request.
 
 ## License
 
-GPL-2.0-or-later, the same terms as GeoServer, which this image redistributes. The upstream source of
-the bundled GeoServer build is at <https://github.com/geoserver/geoserver/tree/3.0.1>.
+GPL-2.0-or-later © GHEgar
+
+The same terms as GeoServer, which this image redistributes. The upstream source of the bundled
+GeoServer build is at <https://github.com/geoserver/geoserver/tree/3.0.1>.
