@@ -4,6 +4,17 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
+## [3.0.1-2] - 2026-10-15
+
+### Agregado
+
+- `geoserver-backup`: respaldo del data_dir a stdout con dueños numéricos, sin los directorios de
+  `BACKUP_EXCLUDE` (por defecto `gwc heapdumps`), mientras GeoServer corre.
+- `geoserver-restore`: restaura desde stdin en un contenedor de un solo uso, con todo como uid 2000 y
+  sin `chown`. Conserva los directorios excluidos, acepta archivos con `data_dir/` al frente, se niega
+  junto a un GeoServer vivo y no toca nada si el archivo no trae `global.xml`.
+- El smoke test comprueba que `geoserver-backup` produce un archivo con `global.xml`.
+
 ## [3.0.1-1] - 2026-10-13
 
 ### Agregado

@@ -13,7 +13,7 @@ variables, a read-only overlay copied into the data directory, and a read-only f
 ## Install
 
 ```bash
-docker pull ghcr.io/ghegar/sacbe:3.0.1-1
+docker pull ghcr.io/ghegar/sacbe:3.0.1-2
 ```
 
 Or build it from this repository:
@@ -51,7 +51,7 @@ Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
 docker run -d --name geoserver -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v geoserver-data:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.1-1
+    ghcr.io/ghegar/sacbe:3.0.1-2
 ```
 
 Open <http://localhost:8080/geoserver/web/> and log in as `admin` / `change-me`. A named volume takes
@@ -61,7 +61,7 @@ its ownership from the image; a bind-mounted data directory must be writable by 
 docker run -d -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v ./data_dir:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.1-1
+    ghcr.io/ghegar/sacbe:3.0.1-2
 ```
 
 ## What is inside
@@ -136,6 +136,36 @@ docker restart <container>
 ```
 
 The hash uses the Jasypt digest that GeoServer ships (`digest1:`, SHA-256, 100000 iterations).
+
+## Backup and restore
+
+Back up while GeoServer runs. The archive goes to stdout, keeps numeric owners and skips the
+directories in `BACKUP_EXCLUDE` (default `gwc heapdumps`):
+
+```bash
+docker exec <container> geoserver-backup > geoserver-data.tar.gz
+```
+
+Restore with GeoServer stopped, from a one-off container that mounts the same data directory:
+
+```bash
+docker stop <container>
+docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.1-2 < geoserver-data.tar.gz
+docker start <container>
+```
+
+With compose: `docker compose stop <service>` and
+`docker compose run --rm -T --no-deps --entrypoint geoserver-restore <service> < geoserver-data.tar.gz`.
+
+| Behaviour | Detail |
+|---|---|
+| Ownership | Everything is restored as uid 2000, whatever the archive says. No `chown` |
+| Excluded directories | Kept as they are in the data directory (the tile cache survives a restore) |
+| Archive layout | Paths relative to the data directory; archives with a top-level `data_dir/` are accepted too |
+| Safety | Refuses to run next to a live GeoServer, and leaves the data directory untouched if the archive has no `global.xml` |
+
+The GeoWebCache directory outside the data directory (`GEOWEBCACHE_CACHE_DIR`) is not part of the
+backup.
 
 ## Known limitations
 

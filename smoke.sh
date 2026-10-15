@@ -61,6 +61,7 @@ check 'WPS sin gs:Download' body_lacks "${BASE}/ows?service=WPS&version=1.0.0&re
 check 'WMS ofrece MVT' body_has "${BASE}/ows?service=WMS&version=1.3.0&request=GetCapabilities" 'application/vnd.mapbox-vector-tile'
 check 'WMTS GetCapabilities' body_has "${BASE}/gwc/service/wmts?REQUEST=GetCapabilities" 'Capabilities'
 check 'REST con admin sembrado' content_type "http://admin:smoke-test@localhost:${PORT}/${CTX}/rest/about/version.json" 'json'
+check 'geoserver-backup con global.xml' sh -c "docker exec ${NAME} geoserver-backup 2>/dev/null | tar -tzf - | grep -qx './global.xml'"
 check 'sin chown en el log' sh -c "! docker logs ${NAME} 2>&1 | grep -qi chown"
 
 exit "${FAILED}"
