@@ -37,7 +37,7 @@ Build arguments:
 |---|---|---|
 | `GS_VERSION` | `3.0.1` | GeoServer release to download |
 | `GS_PLUGINS` | `control-flow wps vectortiles geopkg-output libjpeg-turbo` | Extensions unzipped into `WEB-INF/lib` |
-| `GS_DROP_JARS` | `gs-web-demo gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap` | Jars removed from the WAR |
+| `GS_DROP_JARS` | `gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap` | Jars removed from the WAR |
 | `GS_MIRROR` | SourceForge GeoServer project | Download base URL |
 | `GS_UID`, `GS_GID` | `2000`, `2000` | Runtime user and group |
 | `TOMCAT_IMAGE`, `FETCH_IMAGE` | Tomcat 11.0.27 JDK 21 and Debian trixie-slim, pinned by digest | Final and download stages |
@@ -71,7 +71,7 @@ docker run -d -p 8080:8080 \
 | GeoServer | 3.0.1, official WAR with checksums pinned in `sha256sums.txt` |
 | Base image | `tomcat:11.0.27-jdk21-temurin-noble`, pinned by digest |
 | Extensions | control-flow, wps, vectortiles, geopkg-output, libjpeg-turbo (native library included) |
-| Removed from the WAR | web-demo, sec-jdbc, sec-ldap |
+| Removed from the WAR | sec-jdbc, sec-ldap |
 | User | `geoserveruser:geoserverusers`, uid and gid 2000 |
 
 The WPS extension brings `gs-kml` as a dependency of `gs-wps-kml-ppio`, so KML output is available.

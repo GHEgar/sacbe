@@ -13,7 +13,13 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 - `geoserver-restore`: restaura desde stdin en un contenedor de un solo uso, con todo como uid 2000 y
   sin `chown`. Conserva los directorios excluidos, acepta archivos con `data_dir/` al frente, se niega
   junto a un GeoServer vivo y no toca nada si el archivo no trae `global.xml`.
-- El smoke test comprueba que `geoserver-backup` produce un archivo con `global.xml`.
+- El smoke test comprueba que `geoserver-backup` produce un archivo con `global.xml` y que Layer
+  Preview responde.
+
+### Cambiado
+
+- `gs-web-demo` vuelve al WAR: Layer Preview (lista de capas con visor OpenLayers y descargas), Demo
+  requests, los constructores de peticiones WCS y WPS, la lista de SRS y la consola de reproyección.
 
 ## [3.0.1-1] - 2026-10-13
 
