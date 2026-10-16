@@ -4,6 +4,7 @@ set -eu
 WEBAPP=/opt/geoserver/webapp
 OVERLAY_DIR=${OVERLAY_DIR:-/etc/geoserver/overlay}
 FONTS_DIR=${FONTS_DIR:-/etc/geoserver/fonts}
+CLASSES_DIR=${CLASSES_DIR:-/etc/geoserver/classes}
 DATA_DIR=${GEOSERVER_DATA_DIR}
 
 log() {
@@ -70,6 +71,12 @@ apply_overlay() {
         count=$((count + 1))
     done
     log "overlay: ${count} archivo(s) al data_dir"
+}
+
+apply_classes() {
+    [ -d "${CLASSES_DIR}" ] || return 0
+    cp -Rf "${CLASSES_DIR}/." "${WEBAPP}/WEB-INF/classes/"
+    log "classpath: $(find "${CLASSES_DIR}" -type f | wc -l) archivo(s) a WEB-INF/classes"
 }
 
 link_fonts() {
@@ -145,6 +152,7 @@ fi
 mkdir -p "${DATA_DIR}/heapdumps"
 seed_security
 apply_overlay
+apply_classes
 link_fonts
 render_server_xml
 deploy_context

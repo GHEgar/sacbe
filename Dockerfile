@@ -71,7 +71,8 @@ COPY server.xml.tmpl /opt/geoserver/server.xml.tmpl
 COPY entrypoint.sh /usr/local/bin/sacbe-entrypoint
 COPY datadir.sh /usr/local/bin/sacbe-datadir
 
-RUN chmod 0755 /usr/local/bin/sacbe-entrypoint /usr/local/bin/sacbe-datadir \
+RUN chown "${GS_UID}:${GS_GID}" /opt/geoserver/webapp/WEB-INF/classes \
+    && chmod 0755 /usr/local/bin/sacbe-entrypoint /usr/local/bin/sacbe-datadir \
     && ln -s sacbe-entrypoint /usr/local/bin/geoserver-reset-admin \
     && ln -s sacbe-datadir /usr/local/bin/geoserver-backup \
     && ln -s sacbe-datadir /usr/local/bin/geoserver-restore

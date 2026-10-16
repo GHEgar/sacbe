@@ -4,6 +4,12 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
+## [3.0.1-4] - 2026-10-16
+
+### Agregado
+
+- Capa del classpath: el árbol de `/etc/geoserver/classes` se copia a `WEB-INF/classes` en cada arranque y gana sobre los jars. Sirve para reemplazar recursos de una extensión, como el ícono del botón de OpenID Connect.
+
 ## [3.0.1-3] - 2026-10-16
 
 ### Agregado

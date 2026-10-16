@@ -13,7 +13,7 @@ variables, a read-only overlay copied into the data directory, and a read-only f
 ## Install
 
 ```bash
-docker pull ghcr.io/ghegar/sacbe:3.0.1-3
+docker pull ghcr.io/ghegar/sacbe:3.0.1-4
 ```
 
 Or build it from this repository:
@@ -51,7 +51,7 @@ Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
 docker run -d --name geoserver -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v geoserver-data:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.1-3
+    ghcr.io/ghegar/sacbe:3.0.1-4
 ```
 
 Open <http://localhost:8080/geoserver/web/> and log in as `admin` / `change-me`. A named volume takes
@@ -61,7 +61,7 @@ its ownership from the image; a bind-mounted data directory must be writable by 
 docker run -d -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v ./data_dir:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.1-3
+    ghcr.io/ghegar/sacbe:3.0.1-4
 ```
 
 ## What is inside
@@ -123,6 +123,16 @@ into the data directory:
 The overlay only adds and overwrites. It never deletes, and it overwrites changes made through the
 REST API to the same files.
 
+## Classpath overlay
+
+Mount a directory at `/etc/geoserver/classes` (read-only is fine). On every start its tree is copied
+into `WEB-INF/classes`, which takes precedence over the jars. Use it to replace a resource that an
+extension ships, such as the icon of the OpenID Connect login button:
+
+```text
+classes/org/geoserver/web/security/oauth2/login/openid.png
+```
+
 ## Fonts
 
 Mount a directory with `.ttf`, `.otf` or `.ttc` files at `/etc/geoserver/fonts` (read-only is fine).
@@ -150,7 +160,7 @@ Restore with GeoServer stopped, from a one-off container that mounts the same da
 
 ```bash
 docker stop <container>
-docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.1-3 < geoserver-data.tar.gz
+docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.1-4 < geoserver-data.tar.gz
 docker start <container>
 ```
 
