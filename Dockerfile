@@ -4,7 +4,7 @@ ARG FETCH_IMAGE=debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214
 FROM ${FETCH_IMAGE} AS fetch
 
 ARG GS_VERSION=3.0.1
-ARG GS_PLUGINS="control-flow wps vectortiles geopkg-output libjpeg-turbo"
+ARG GS_PLUGINS="control-flow wps vectortiles geopkg-output libjpeg-turbo sec-oidc"
 ARG GS_MIRROR=https://downloads.sourceforge.net/project/geoserver/GeoServer
 ARG GS_DROP_JARS="gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap"
 

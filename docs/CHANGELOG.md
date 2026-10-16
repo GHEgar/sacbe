@@ -4,6 +4,12 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
+## [3.0.1-3] - 2026-10-16
+
+### Agregado
+
+- Extensión `sec-oidc`: inicio de sesión con cualquier proveedor OpenID Connect (discovery, PKCE, roles desde los claims del token y bearer tokens en REST). Sin configurar no cambia nada; el filtro se crea desde la interfaz o por REST.
+
 ## [3.0.1-2] - 2026-10-15
 
 ### Agregado

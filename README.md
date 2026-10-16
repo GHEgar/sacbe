@@ -13,7 +13,7 @@ variables, a read-only overlay copied into the data directory, and a read-only f
 ## Install
 
 ```bash
-docker pull ghcr.io/ghegar/sacbe:3.0.1-2
+docker pull ghcr.io/ghegar/sacbe:3.0.1-3
 ```
 
 Or build it from this repository:
@@ -36,7 +36,7 @@ Build arguments:
 | Argument | Default | Effect |
 |---|---|---|
 | `GS_VERSION` | `3.0.1` | GeoServer release to download |
-| `GS_PLUGINS` | `control-flow wps vectortiles geopkg-output libjpeg-turbo` | Extensions unzipped into `WEB-INF/lib` |
+| `GS_PLUGINS` | `control-flow wps vectortiles geopkg-output libjpeg-turbo sec-oidc` | Extensions unzipped into `WEB-INF/lib` |
 | `GS_DROP_JARS` | `gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap` | Jars removed from the WAR |
 | `GS_MIRROR` | SourceForge GeoServer project | Download base URL |
 | `GS_UID`, `GS_GID` | `2000`, `2000` | Runtime user and group |
@@ -51,7 +51,7 @@ Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
 docker run -d --name geoserver -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v geoserver-data:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.1-2
+    ghcr.io/ghegar/sacbe:3.0.1-3
 ```
 
 Open <http://localhost:8080/geoserver/web/> and log in as `admin` / `change-me`. A named volume takes
@@ -61,7 +61,7 @@ its ownership from the image; a bind-mounted data directory must be writable by 
 docker run -d -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v ./data_dir:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.1-2
+    ghcr.io/ghegar/sacbe:3.0.1-3
 ```
 
 ## What is inside
@@ -70,7 +70,7 @@ docker run -d -p 8080:8080 \
 |---|---|
 | GeoServer | 3.0.1, official WAR with checksums pinned in `sha256sums.txt` |
 | Base image | `tomcat:11.0.27-jdk21-temurin-noble`, pinned by digest |
-| Extensions | control-flow, wps, vectortiles, geopkg-output, libjpeg-turbo (native library included) |
+| Extensions | control-flow, wps, vectortiles, geopkg-output, libjpeg-turbo (native library included), sec-oidc |
 | Removed from the WAR | sec-jdbc, sec-ldap |
 | User | `geoserveruser:geoserverusers`, uid and gid 2000 |
 
@@ -150,7 +150,7 @@ Restore with GeoServer stopped, from a one-off container that mounts the same da
 
 ```bash
 docker stop <container>
-docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.1-2 < geoserver-data.tar.gz
+docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.1-3 < geoserver-data.tar.gz
 docker start <container>
 ```
 

@@ -1,6 +1,7 @@
 08e1c95e0f753fa6b63f815d3314764d891d9cf1bee418dcae6ea5bf25025a1d  geoserver-3.0.1-control-flow-plugin.zip
 ef7d7b248645e0ef42886852aa4cbbf536f5ad24298242f8d12a7ffb862c94d8  geoserver-3.0.1-geopkg-output-plugin.zip
 a3fc66fa576a283b6a64a08a2dcc75330c96d5fdbaec345136f17c4990f63376  geoserver-3.0.1-libjpeg-turbo-plugin.zip
+da8e89e7e2b4fc332fb5f1a9afeb8c93aabb7225ef3551ecf50e1c0b2d6344bc  geoserver-3.0.1-sec-oidc-plugin.zip
 d6affd06372a44cc26cba6e07765b316f588ac540e4f7cc1ba377a10ba5ce49c  geoserver-3.0.1-vectortiles-plugin.zip
 c562f666a89141e5e7159fb0b2e3f3f8aa1ff96c3d70aa14dac2e9d911981f54  geoserver-3.0.1-war.zip
 6b82c516cf7e235d9d8f2ac3cfd475c754e427881eb978e666e6a6c78b92b069  geoserver-3.0.1-wps-plugin.zip
