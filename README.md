@@ -40,6 +40,7 @@ Build arguments:
 | `GS_DROP_JARS` | `gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap` | Jars removed from the WAR |
 | `GS_PATCH_JARS` | `org.apache.httpcomponents.core5:httpcore5-h2:5.4.3` and `httpclient5`, `httpclient5-cache` `5.6.3` | Maven `group:artifact:version` that replace the WAR's copy of that artifact, checked against `sha256sums.txt` |
 | `MAVEN_MIRROR` | `https://repo1.maven.org/maven2` | Where `GS_PATCH_JARS` are downloaded from |
+| `GS_SOURCE` | `https://raw.githubusercontent.com/geoserver/geoserver` | Where the GeoServer sources touched by `patches/` are downloaded from, at the `GS_VERSION` tag |
 | `GS_MIRROR` | SourceForge GeoServer project | Download base URL |
 | `GS_UID`, `GS_GID` | `2000`, `2000` | Runtime user and group |
 | `TOMCAT_IMAGE`, `FETCH_IMAGE` | Tomcat 11.0.27 JDK 21 and Debian trixie-slim, pinned by digest | Final and download stages |
@@ -74,9 +75,19 @@ docker run -d -p 8080:8080 \
 | Base image | `tomcat:11.0.27-jdk21-temurin-noble`, pinned by digest |
 | Extensions | control-flow, wps, vectortiles, geopkg-output, libjpeg-turbo (native library included), sec-oidc |
 | Removed from the WAR | sec-jdbc, sec-ldap |
+| Source patches | `patches/sec-oidc-proxy-template.patch` |
 | User | `geoserveruser:geoserverusers`, uid and gid 2000 |
 
 The WPS extension brings `gs-kml` as a dependency of `gs-wps-kml-ppio`, so KML output is available.
+
+Each file in `patches/` is a diff against the GeoServer source tree. The build downloads the files it
+touches at the `GS_VERSION` tag, checks them against `sha256sums.txt`, applies the diff, compiles them
+against the WAR's jars and puts the classes in `WEB-INF/classes`, which wins over the jars. A new
+GeoServer version fails the checksum until the patch is reviewed. `sec-oidc-proxy-template.patch` lets
+OpenID Connect work when the proxy base URL uses header placeholders such as
+`${X-Forwarded-Proto}://${X-Forwarded-Host}/geoserver`: upstream builds the `redirect_uri` from the
+raw template and the login fails, the patch takes the host from the request (the Tomcat connector
+behind `PROXY_*`) instead.
 
 Image tags follow `<geoserver-version>-<revision>`: `3.0.1-1` is the first build of GeoServer 3.0.1.
 No moving tags are published.

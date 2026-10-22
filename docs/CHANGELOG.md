@@ -4,6 +4,16 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
+## [3.0.2-2] - 2026-10-22
+
+### Agregado
+
+- Parches de código fuente en `patches/`: el build baja del tag de GeoServer los archivos que tocan, los verifica por sha256, aplica el diff y compila las clases en `WEB-INF/classes`.
+
+### Corregido
+
+- OpenID Connect con un proxy base URL que usa cabeceras (`${X-Forwarded-Proto}://${X-Forwarded-Host}/…`): `sec-oidc` armaba el `redirect_uri` con la plantilla sin expandir y el botón de inicio de sesión respondía 500 y el filtro no se podía guardar por REST. Con el parche toma el host de la petición, que da el connector de Tomcat con `PROXY_*`; sin petición en curso conserva el comportamiento original.
+
 ## [3.0.2-1] - 2026-10-22
 
 ### Cambiado

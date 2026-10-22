@@ -9,13 +9,15 @@ ARG GS_MIRROR=https://downloads.sourceforge.net/project/geoserver/GeoServer
 ARG GS_DROP_JARS="gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap"
 ARG GS_PATCH_JARS="org.apache.httpcomponents.core5:httpcore5-h2:5.4.3 org.apache.httpcomponents.client5:httpclient5:5.6.3 org.apache.httpcomponents.client5:httpclient5-cache:5.6.3"
 ARG MAVEN_MIRROR=https://repo1.maven.org/maven2
+ARG GS_SOURCE=https://raw.githubusercontent.com/geoserver/geoserver
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl unzip \
+    && apt-get install -y --no-install-recommends ca-certificates curl patch unzip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /fetch
 COPY sha256sums.txt .
+COPY patches/ patches/
 
 RUN set -eu; \
     get() { \
@@ -28,7 +30,18 @@ RUN set -eu; \
         g=${c%%:*}; r=${c#*:}; a=${r%%:*}; v=${r#*:}; \
         get "${a}-${v}.jar" "${MAVEN_MIRROR}/$(echo "${g}" | tr . /)/${a}/${v}"; \
     done; \
+    for f in patches/*.patch; do \
+        [ -e "${f}" ] || continue; \
+        for src in $(sed -n 's#^+++ b/##p' "${f}"); do \
+            grep -q "  src/${src}\$" sha256sums.txt || { echo "sin sha256 para ${src}" >&2; exit 1; }; \
+            mkdir -p "src/$(dirname "${src}")"; \
+            curl -fsSL --retry 5 -o "src/${src}" "${GS_SOURCE}/${GS_VERSION}/${src}"; \
+        done; \
+    done; \
     sha256sum -c --ignore-missing --strict sha256sums.txt; \
+    mkdir -p src /stage/src; \
+    for f in patches/*.patch; do [ -e "${f}" ] && patch -s -d src -p1 < "${f}"; done; \
+    find src -name '*.java' -exec cp --parents {} /stage/ \; ; \
     unzip -q "geoserver-${GS_VERSION}-war.zip" geoserver.war; \
     mkdir -p /stage/webapp /stage/lib; \
     unzip -q geoserver.war -d /stage/webapp; \
@@ -40,6 +53,16 @@ RUN set -eu; \
         cp "${a}-${v}.jar" /stage/webapp/WEB-INF/lib/; \
     done; \
     mv /stage/webapp/WEB-INF/lib/marlin-*.jar /stage/lib/marlin.jar
+
+FROM ${TOMCAT_IMAGE} AS compile
+
+COPY --from=fetch /stage/webapp/WEB-INF/lib /lib
+COPY --from=fetch /stage/src /src
+
+RUN set -eu; \
+    mkdir -p /classes; \
+    files=$(find /src -name '*.java'); \
+    [ -z "${files}" ] || javac -proc:none --release 21 -nowarn -encoding UTF-8 -cp '/lib/*' -d /classes ${files}
 
 FROM ${TOMCAT_IMAGE}
 
@@ -78,11 +101,12 @@ RUN apt-get update \
 
 COPY --from=fetch /stage/webapp /opt/geoserver/webapp
 COPY --from=fetch /stage/lib/marlin.jar ${CATALINA_HOME}/lib/marlin.jar
+COPY --from=compile /classes /opt/geoserver/webapp/WEB-INF/classes
 COPY server.xml.tmpl /opt/geoserver/server.xml.tmpl
 COPY entrypoint.sh /usr/local/bin/sacbe-entrypoint
 COPY datadir.sh /usr/local/bin/sacbe-datadir
 
-RUN chown "${GS_UID}:${GS_GID}" /opt/geoserver/webapp/WEB-INF/classes \
+RUN chown -R "${GS_UID}:${GS_GID}" /opt/geoserver/webapp/WEB-INF/classes \
     && chmod 0755 /usr/local/bin/sacbe-entrypoint /usr/local/bin/sacbe-datadir \
     && ln -s sacbe-entrypoint /usr/local/bin/geoserver-reset-admin \
     && ln -s sacbe-datadir /usr/local/bin/geoserver-backup \

@@ -1,0 +1,48 @@
+--- a/src/extension/security/oidc-core/src/main/java/org/geoserver/security/oauth2/config/GeoServerOAuth2LoginFilterConfig.java
++++ b/src/extension/security/oidc-core/src/main/java/org/geoserver/security/oauth2/config/GeoServerOAuth2LoginFilterConfig.java
+@@ -286,8 +286,12 @@
+         // 1. PROXY_BASE_URL env var / system property — highest priority, used in container
+         //    deployments where the env var overrides global.xml at runtime
+         String envProxyBase = GeoServerExtensions.getProperty("PROXY_BASE_URL");
++        String templated = null;
+         if (StringUtils.hasText(envProxyBase)) {
+-            return ensureTrailingSlash(envProxyBase);
++            if (!isTemplate(envProxyBase)) {
++                return ensureTrailingSlash(envProxyBase);
++            }
++            templated = envProxyBase;
+         }
+         // 2. proxyBaseUrl from GeoServer settings (global.xml or per-workspace)
+         //    In GeoServer 3.x, getProxyBaseUrl() returns Optional<String> instead of String.
+@@ -296,18 +300,30 @@
+         if (gs != null && gs.getSettings() != null) {
+             String url = unwrapToString(gs.getSettings().getProxyBaseUrl());
+             if (StringUtils.hasText(url)) {
+-                return ensureTrailingSlash(url);
++                if (!isTemplate(url)) {
++                    return ensureTrailingSlash(url);
++                }
++                if (templated == null) {
++                    templated = url;
++                }
+             }
+         }
+         // 3. derive from current HTTP request context
+         if (RequestContextHolder.getRequestAttributes() != null) {
+             return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + "/";
+         }
++        if (templated != null) {
++            return ensureTrailingSlash(templated);
++        }
+         // 4. fallback to run tests without a full environment
+         String testBase = GeoServerExtensions.getProperty(OPENID_TEST_GS_PROXY_BASE);
+         return testBase != null ? ensureTrailingSlash(testBase) : null;
+     }
+ 
++    private static boolean isTemplate(String url) {
++        return url.contains("${");
++    }
++
+     /** Appends "/" if not already present. */
+     private static String ensureTrailingSlash(String url) {
+         return url.endsWith("/") ? url : url + "/";

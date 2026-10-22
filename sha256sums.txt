@@ -8,3 +8,4 @@ aaf50ee4943a437dee2620c33263b19e271273d281112dd2494de42b5ffe533e  geoserver-3.0.
 80712ff129210d7c73d9fcc1195cbee5c3c34744965c7a05ea107b3648922f18  httpclient5-5.6.3.jar
 8eb52e3c3308f8f6ed425ed0b808b6c850b841238d8ef80a6f7917be55f169a3  httpclient5-cache-5.6.3.jar
 c7db7026b8e2dea39132b04a6069f6671e2858309b20a146ec5c7dd6ed73a0b6  httpcore5-h2-5.4.3.jar
+2ec1242d841f16d1237a8e5db7b0da8ba882212f0d53912abff1c52a1a3063de  src/src/extension/security/oidc-core/src/main/java/org/geoserver/security/oauth2/config/GeoServerOAuth2LoginFilterConfig.java
