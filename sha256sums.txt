@@ -1,7 +1,10 @@
-08e1c95e0f753fa6b63f815d3314764d891d9cf1bee418dcae6ea5bf25025a1d  geoserver-3.0.1-control-flow-plugin.zip
-ef7d7b248645e0ef42886852aa4cbbf536f5ad24298242f8d12a7ffb862c94d8  geoserver-3.0.1-geopkg-output-plugin.zip
-a3fc66fa576a283b6a64a08a2dcc75330c96d5fdbaec345136f17c4990f63376  geoserver-3.0.1-libjpeg-turbo-plugin.zip
-da8e89e7e2b4fc332fb5f1a9afeb8c93aabb7225ef3551ecf50e1c0b2d6344bc  geoserver-3.0.1-sec-oidc-plugin.zip
-d6affd06372a44cc26cba6e07765b316f588ac540e4f7cc1ba377a10ba5ce49c  geoserver-3.0.1-vectortiles-plugin.zip
-c562f666a89141e5e7159fb0b2e3f3f8aa1ff96c3d70aa14dac2e9d911981f54  geoserver-3.0.1-war.zip
-6b82c516cf7e235d9d8f2ac3cfd475c754e427881eb978e666e6a6c78b92b069  geoserver-3.0.1-wps-plugin.zip
+9259c9b46ad602e85bed6ca703b1423acb77bd99ec1a20ac9353a0e1f7bf79b9  geoserver-3.0.2-control-flow-plugin.zip
+d771801f0d41a0bd6a5cb234ed79a4de1b5b3272f14f8197d2c40837dca4514f  geoserver-3.0.2-geopkg-output-plugin.zip
+f6bd3d2d3f80c82658b0bf6bce47f41d0d2e84c199a2b53a0d9d18e502f40563  geoserver-3.0.2-libjpeg-turbo-plugin.zip
+ed26279d3071a936225600fdcaea624bfc28e4ed494dae59996155a7ba768f10  geoserver-3.0.2-sec-oidc-plugin.zip
+289bc62c212826650f72873e8c4beac4281b4a241552a3b6dbf533022367745d  geoserver-3.0.2-vectortiles-plugin.zip
+cfd5713192fad64c0e0e7c89168f29abb798213d5e7229b28274a0c20a736a55  geoserver-3.0.2-war.zip
+aaf50ee4943a437dee2620c33263b19e271273d281112dd2494de42b5ffe533e  geoserver-3.0.2-wps-plugin.zip
+80712ff129210d7c73d9fcc1195cbee5c3c34744965c7a05ea107b3648922f18  httpclient5-5.6.3.jar
+8eb52e3c3308f8f6ed425ed0b808b6c850b841238d8ef80a6f7917be55f169a3  httpclient5-cache-5.6.3.jar
+c7db7026b8e2dea39132b04a6069f6671e2858309b20a146ec5c7dd6ed73a0b6  httpcore5-h2-5.4.3.jar

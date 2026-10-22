@@ -4,6 +4,21 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
+## [3.0.2-1] - 2026-10-22
+
+### Cambiado
+
+- GeoServer 3.0.2 con sus extensiones, verificadas por sha256. Trae spring 7.0.9, freemarker 2.3.35 y bcprov-lts8on 2.73.13, que corrigen CVE-2026-47884, CVE-2026-47890, CVE-2026-84939 y CVE-2026-8763.
+- Bases `tomcat:11.0.27-jdk21-temurin-noble` y `debian:trixie-slim` en sus digest más recientes.
+
+### Agregado
+
+- `GS_PATCH_JARS`: reemplaza jars del WAR por versiones corregidas de Maven Central, verificadas por sha256. Sube `httpcore5-h2` a 5.4.3 (CVE-2026-54428) y `httpclient5` y `httpclient5-cache` a 5.6.3 (CVE-2026-64607), alineados con el `httpcore5` 5.4.3 que ya trae el WAR.
+
+### Eliminado
+
+- Las cuatro CVE de `.trivyignore`: el escaneo no encuentra ninguna vulnerabilidad con arreglo, de ninguna severidad.
+
 ## [3.0.1-4] - 2026-10-16
 
 ### Agregado

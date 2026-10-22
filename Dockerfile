@@ -1,12 +1,14 @@
-ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk21-temurin-noble@sha256:05532a690ebbdf637fc3936698b274febc15f7f41d376d41f15999d2f4af1a71
-ARG FETCH_IMAGE=debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
+ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk21-temurin-noble@sha256:6e0d99d18e38a23a95574a67bd7849d46844b649c9b5238d91a3d0a3bf5f489a
+ARG FETCH_IMAGE=debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
 
 FROM ${FETCH_IMAGE} AS fetch
 
-ARG GS_VERSION=3.0.1
+ARG GS_VERSION=3.0.2
 ARG GS_PLUGINS="control-flow wps vectortiles geopkg-output libjpeg-turbo sec-oidc"
 ARG GS_MIRROR=https://downloads.sourceforge.net/project/geoserver/GeoServer
 ARG GS_DROP_JARS="gs-sec-jdbc gs-web-sec-jdbc gs-sec-ldap gs-web-sec-ldap"
+ARG GS_PATCH_JARS="org.apache.httpcomponents.core5:httpcore5-h2:5.4.3 org.apache.httpcomponents.client5:httpclient5:5.6.3 org.apache.httpcomponents.client5:httpclient5-cache:5.6.3"
+ARG MAVEN_MIRROR=https://repo1.maven.org/maven2
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl unzip \
@@ -22,17 +24,26 @@ RUN set -eu; \
     }; \
     get "geoserver-${GS_VERSION}-war.zip" "${GS_MIRROR}/${GS_VERSION}"; \
     for p in ${GS_PLUGINS}; do get "geoserver-${GS_VERSION}-${p}-plugin.zip" "${GS_MIRROR}/${GS_VERSION}/extensions"; done; \
+    for c in ${GS_PATCH_JARS}; do \
+        g=${c%%:*}; r=${c#*:}; a=${r%%:*}; v=${r#*:}; \
+        get "${a}-${v}.jar" "${MAVEN_MIRROR}/$(echo "${g}" | tr . /)/${a}/${v}"; \
+    done; \
     sha256sum -c --ignore-missing --strict sha256sums.txt; \
     unzip -q "geoserver-${GS_VERSION}-war.zip" geoserver.war; \
     mkdir -p /stage/webapp /stage/lib; \
     unzip -q geoserver.war -d /stage/webapp; \
     for p in ${GS_PLUGINS}; do unzip -qo "geoserver-${GS_VERSION}-${p}-plugin.zip" '*.jar' -d /stage/webapp/WEB-INF/lib; done; \
     for j in ${GS_DROP_JARS}; do rm -f /stage/webapp/WEB-INF/lib/"${j}"-"${GS_VERSION}".jar; done; \
+    for c in ${GS_PATCH_JARS}; do \
+        r=${c#*:}; a=${r%%:*}; v=${r#*:}; \
+        rm -f /stage/webapp/WEB-INF/lib/"${a}"-[0-9]*.jar; \
+        cp "${a}-${v}.jar" /stage/webapp/WEB-INF/lib/; \
+    done; \
     mv /stage/webapp/WEB-INF/lib/marlin-*.jar /stage/lib/marlin.jar
 
 FROM ${TOMCAT_IMAGE}
 
-ARG GS_VERSION=3.0.1
+ARG GS_VERSION=3.0.2
 ARG GS_UID=2000
 ARG GS_GID=2000
 ARG REVISION=unknown
