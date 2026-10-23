@@ -29,6 +29,127 @@ password_hash() {
     printf 'digest1:%s' "${digest}"
 }
 
+xml_escape() {
+    printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g'
+}
+
+XML_AWK='
+BEGIN { RS = "\001" }
+{ s = s $0 }
+function attr(tag, key,    v) {
+    if (!match(tag, "[ \t\r\n]" key "=\"[^\"]*\"")) return ""
+    v = substr(tag, RSTART, RLENGTH)
+    sub(/^[^"]*"/, "", v)
+    return substr(v, 1, length(v) - 1)
+}
+function set_attr(tag, key, val) {
+    if (match(tag, "[ \t\r\n]" key "=\"[^\"]*\""))
+        return substr(tag, 1, RSTART) key "=\"" val "\"" substr(tag, RSTART + RLENGTH)
+    if (substr(tag, length(tag) - 1) == "/>")
+        return substr(tag, 1, length(tag) - 2) " " key "=\"" val "\"/>"
+    return substr(tag, 1, length(tag) - 1) " " key "=\"" val "\">"
+}
+function find_tag(str, re, key, val,    off, rest, at, n) {
+    off = 0
+    rest = str
+    while (match(rest, re)) {
+        at = RSTART
+        n = RLENGTH
+        if (attr(substr(rest, at, n), key) == val) {
+            TLEN = n
+            return off + at
+        }
+        off += at + n - 1
+        rest = substr(rest, at + n)
+    }
+    return 0
+}
+function lead(str, pos,    q) {
+    q = pos
+    while (q > 1 && substr(str, q - 1, 1) ~ /[ \t]/) q--
+    return q
+}
+function put(str, pos, text,    q) {
+    q = lead(str, pos)
+    if (q > 1 && substr(str, q - 1, 1) != "\n")
+        return substr(str, 1, pos - 1) text substr(str, pos)
+    return substr(str, 1, q - 1) substr(str, q, pos - q) "    " text "\n" substr(str, q)
+}
+function add_in(str, p, len, parent, text,    q, c) {
+    if (substr(str, p + len - 2, 2) == "/>") {
+        q = lead(str, p)
+        str = substr(str, 1, p + len - 3) ">\n" substr(str, q, p - q) "</" parent ">" substr(str, p + len)
+    }
+    c = index(substr(str, p), "</" parent ">")
+    if (!c) {
+        BAD = 1
+        return str
+    }
+    return put(str, p + c - 1, text)
+}
+function add_child(str, parent, text) {
+    if (!match(str, "<" parent "([ \t\r\n][^>]*)?/?>")) {
+        BAD = 1
+        return str
+    }
+    return add_in(str, RSTART, RLENGTH, parent, text)
+}
+'
+
+set_user_password() {
+    SACBE_USER=$(xml_escape "$2") SACBE_HASH=$3 awk "${XML_AWK}"'
+        END {
+            name = ENVIRON["SACBE_USER"]
+            out = ""
+            rest = s
+            found = 0
+            while (match(rest, /<user[ \t\r\n][^>]*>/)) {
+                tag = substr(rest, RSTART, RLENGTH)
+                out = out substr(rest, 1, RSTART - 1)
+                rest = substr(rest, RSTART + RLENGTH)
+                if (attr(tag, "name") == name) {
+                    tag = set_attr(tag, "password", ENVIRON["SACBE_HASH"])
+                    found = 1
+                }
+                out = out tag
+            }
+            out = out rest
+            if (!found)
+                out = add_child(out, "users", "<user enabled=\"true\" name=\"" name "\" password=\"" ENVIRON["SACBE_HASH"] "\"/>")
+            if (BAD) exit 2
+            printf "%s", out
+            exit (found ? 0 : 3)
+        }' "$1"
+}
+
+grant_admin_roles() {
+    SACBE_USER=$(xml_escape "$2") awk "${XML_AWK}"'
+        END {
+            name = ENVIRON["SACBE_USER"]
+            out = s
+            split("ADMIN GROUP_ADMIN", ids, " ")
+            for (i = 1; i <= 2; i++)
+                if (!find_tag(out, "<role[ \t\r\n][^>]*>", "id", ids[i]))
+                    out = add_child(out, "roleList", "<role id=\"" ids[i] "\"/>")
+            ur = "<userRoles[ \t\r\n][^>]*>"
+            if (!find_tag(out, ur, "username", name))
+                out = add_child(out, "userList", "<userRoles username=\"" name "\"/>")
+            for (i = 1; i <= 2 && !BAD; i++) {
+                p = find_tag(out, ur, "username", name)
+                len = TLEN
+                tag = substr(out, p, len)
+                if (substr(tag, len - 1) == "/>")
+                    block = tag
+                else
+                    block = substr(out, p, index(substr(out, p), "</userRoles>"))
+                if (!find_tag(block, "<roleRef[ \t\r\n][^>]*>", "roleID", ids[i]))
+                    out = add_in(out, p, len, "userRoles", "<roleRef roleID=\"" ids[i] "\"/>")
+            }
+            if (BAD) exit 2
+            printf "%s", out
+        }' "$1"
+}
+
 reset_admin() {
     : "${GEOSERVER_ADMIN_USER:?falta GEOSERVER_ADMIN_USER}"
     : "${GEOSERVER_ADMIN_PASSWORD:?falta GEOSERVER_ADMIN_PASSWORD}"
@@ -36,13 +157,27 @@ reset_admin() {
     roles="${DATA_DIR}/security/role/default/roles.xml"
     [ -f "${users}" ] || { log "no existe ${users}"; return 1; }
     hash=$(password_hash "${GEOSERVER_ADMIN_PASSWORD}")
-    user=$(sed_escape "${GEOSERVER_ADMIN_USER}")
-    hash=$(sed_escape "${hash}")
-    sed -i "0,/<user /{s|name=\"[^\"]*\"|name=\"${user}\"|; s|password=\"[^\"]*\"|password=\"${hash}\"|}" "${users}"
-    if [ -f "${roles}" ]; then
-        sed -i "s|username=\"[^\"]*\"|username=\"${user}\"|g" "${roles}"
+    new_users=$(mktemp)
+    new_roles=$(mktemp)
+    rc=0
+    set_user_password "${users}" "${GEOSERVER_ADMIN_USER}" "${hash}" > "${new_users}" || rc=$?
+    if [ "${rc}" -eq 3 ]; then
+        if [ -f "${roles}" ] && grant_admin_roles "${roles}" "${GEOSERVER_ADMIN_USER}" > "${new_roles}"; then
+            cat "${new_roles}" > "${roles}"
+        else
+            rc=4
+        fi
     fi
-    log "admin actualizado: ${GEOSERVER_ADMIN_USER}"
+    case "${rc}" in
+        0|3) cat "${new_users}" > "${users}" ;;
+    esac
+    rm -f "${new_users}" "${new_roles}"
+    case "${rc}" in
+        0) log "admin actualizado: ${GEOSERVER_ADMIN_USER}" ;;
+        3) log "admin agregado con ADMIN y GROUP_ADMIN: ${GEOSERVER_ADMIN_USER}" ;;
+        4) log "no se pudo leer ${roles}"; return 1 ;;
+        *) log "no se pudo leer ${users}"; return 1 ;;
+    esac
 }
 
 seed_security() {
@@ -50,7 +185,13 @@ seed_security() {
     [ -n "${GEOSERVER_ADMIN_PASSWORD:-}" ] || return 0
     log 'data_dir sin security/: se siembra el admin'
     cp -R "${WEBAPP}/data/security" "${DATA_DIR}/security"
-    GEOSERVER_ADMIN_USER=${GEOSERVER_ADMIN_USER:-admin} reset_admin
+    GEOSERVER_ADMIN_USER=${GEOSERVER_ADMIN_USER:-admin}
+    if [ "${GEOSERVER_ADMIN_USER}" != 'admin' ]; then
+        user=$(sed_escape "$(xml_escape "${GEOSERVER_ADMIN_USER}")")
+        sed -i "s|name=\"admin\"|name=\"${user}\"|" "${DATA_DIR}/security/usergroup/default/users.xml"
+        sed -i "s|username=\"admin\"|username=\"${user}\"|" "${DATA_DIR}/security/role/default/roles.xml"
+    fi
+    reset_admin
 }
 
 apply_overlay() {

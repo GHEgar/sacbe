@@ -4,6 +4,12 @@ Todos los cambios notables de este proyecto se documentan aquí. El formato sigu
 [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las etiquetas de la imagen son
 `<versión-de-GeoServer>-<revisión>`.
 
+## [3.0.2-3] - 2026-10-23
+
+### Corregido
+
+- `geoserver-reset-admin` reescribía el primer `<user>` de `users.xml` sin mirar su nombre y ponía `GEOSERVER_ADMIN_USER` en todos los `username` de `roles.xml`: si el primero era otro usuario, quedaba renombrado y había dos admins con contraseñas distintas. Ahora busca el usuario por nombre exacto y solo cambia su contraseña; si no existe, lo agrega con `ADMIN` y `GROUP_ADMIN` sin duplicar bloques de `roles.xml`, y no toca a ningún otro usuario.
+
 ## [3.0.2-2] - 2026-10-22
 
 ### Agregado

@@ -13,7 +13,7 @@ variables, a read-only overlay copied into the data directory, and a read-only f
 ## Install
 
 ```bash
-docker pull ghcr.io/ghegar/sacbe:3.0.2-1
+docker pull ghcr.io/ghegar/sacbe:3.0.2-3
 ```
 
 Or build it from this repository:
@@ -54,7 +54,7 @@ Every downloaded zip must have a line in `sha256sums.txt`, or the build stops.
 docker run -d --name geoserver -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v geoserver-data:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.2-1
+    ghcr.io/ghegar/sacbe:3.0.2-3
 ```
 
 Open <http://localhost:8080/geoserver/web/> and log in as `admin` / `change-me`. A named volume takes
@@ -64,7 +64,7 @@ its ownership from the image; a bind-mounted data directory must be writable by 
 docker run -d -p 8080:8080 \
     -e GEOSERVER_ADMIN_PASSWORD=change-me \
     -v ./data_dir:/opt/geoserver/data_dir \
-    ghcr.io/ghegar/sacbe:3.0.2-1
+    ghcr.io/ghegar/sacbe:3.0.2-3
 ```
 
 ## What is inside
@@ -158,6 +158,9 @@ docker exec -e GEOSERVER_ADMIN_USER=admin -e GEOSERVER_ADMIN_PASSWORD=new <conta
 docker restart <container>
 ```
 
+Only the user named `GEOSERVER_ADMIN_USER` has its password changed. If it does not exist, it is added
+with the `ADMIN` and `GROUP_ADMIN` roles; other users are left untouched.
+
 The hash uses the Jasypt digest that GeoServer ships (`digest1:`, SHA-256, 100000 iterations).
 
 ## Backup and restore
@@ -173,7 +176,7 @@ Restore with GeoServer stopped, from a one-off container that mounts the same da
 
 ```bash
 docker stop <container>
-docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.2-1 < geoserver-data.tar.gz
+docker run --rm -i --volumes-from <container> --entrypoint geoserver-restore ghcr.io/ghegar/sacbe:3.0.2-3 < geoserver-data.tar.gz
 docker start <container>
 ```
 

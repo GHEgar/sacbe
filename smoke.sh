@@ -36,6 +36,96 @@ content_type() {
     curl -fsS --max-time 60 -o /dev/null -w '%{content_type}' "$1" | grep -q "$2"
 }
 
+reset_case() {
+    docker run --rm -i -e GEOSERVER_DATA_DIR=/tmp/dd -e GEOSERVER_ADMIN_USER=jefe \
+        -e GEOSERVER_ADMIN_PASSWORD=nueva --entrypoint sh "${IMAGE}" -eu >/dev/null 2>&1
+}
+
+check 'reset-admin solo cambia al admin, que no es el primero' reset_case <<'EOF'
+u=/tmp/dd/security/usergroup/default
+r=/tmp/dd/security/role/default
+mkdir -p "$u" "$r"
+cat > "$u/users.xml" <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<userRegistry version="1.0" xmlns="http://www.geoserver.org/security/users">
+    <users>
+        <user enabled="true" name="ana" password="plain:a"/>
+        <user enabled="true" name="jefe" password="plain:viejo"/>
+        <user enabled="true" name="beto" password="plain:b"/>
+    </users>
+    <groups/>
+</userRegistry>
+XML
+cat > "$r/roles.xml" <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<roleRegistry version="1.0" xmlns="http://www.geoserver.org/security/roles">
+    <roleList>
+        <role id="ADMIN"/>
+        <role id="GROUP_ADMIN"/>
+    </roleList>
+    <userList>
+        <userRoles username="ana">
+            <roleRef roleID="ADMIN"/>
+        </userRoles>
+        <userRoles username="jefe">
+            <roleRef roleID="ADMIN"/>
+        </userRoles>
+    </userList>
+    <groupList/>
+</roleRegistry>
+XML
+cp "$r/roles.xml" /tmp/roles.orig
+sacbe-entrypoint reset-admin
+[ "$(grep -c '<user ' "$u/users.xml")" = 3 ]
+grep -q '<user enabled="true" name="ana" password="plain:a"/>' "$u/users.xml"
+grep -q '<user enabled="true" name="beto" password="plain:b"/>' "$u/users.xml"
+grep -q '<user enabled="true" name="jefe" password="digest1:' "$u/users.xml"
+cmp -s "$r/roles.xml" /tmp/roles.orig
+EOF
+
+check 'reset-admin agrega al admin que falta sin duplicar roles' reset_case <<'EOF'
+u=/tmp/dd/security/usergroup/default
+r=/tmp/dd/security/role/default
+mkdir -p "$u" "$r"
+cat > "$u/users.xml" <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<userRegistry version="1.0" xmlns="http://www.geoserver.org/security/users">
+    <users>
+        <user enabled="true" name="ana" password="plain:a"/>
+        <user enabled="true" name="beto" password="plain:b"/>
+        <user enabled="true" name="carla" password="plain:c"/>
+    </users>
+    <groups/>
+</userRegistry>
+XML
+cat > "$r/roles.xml" <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<roleRegistry version="1.0" xmlns="http://www.geoserver.org/security/roles">
+    <roleList>
+        <role id="ADMIN"/>
+        <role id="GROUP_ADMIN"/>
+    </roleList>
+    <userList>
+        <userRoles username="ana">
+            <roleRef roleID="ADMIN"/>
+        </userRoles>
+    </userList>
+    <groupList/>
+</roleRegistry>
+XML
+sacbe-entrypoint reset-admin
+sacbe-entrypoint reset-admin
+[ "$(grep -c '<user ' "$u/users.xml")" = 4 ]
+[ "$(grep -c 'name="jefe" password="digest1:' "$u/users.xml")" = 1 ]
+grep -q '<user enabled="true" name="ana" password="plain:a"/>' "$u/users.xml"
+[ "$(grep -c '<userRoles ' "$r/roles.xml")" = 2 ]
+[ "$(grep -c 'username="ana"' "$r/roles.xml")" = 1 ]
+[ "$(grep -c '<role id=' "$r/roles.xml")" = 2 ]
+[ "$(grep -c 'roleID="ADMIN"' "$r/roles.xml")" = 2 ]
+[ "$(grep -c 'roleID="GROUP_ADMIN"' "$r/roles.xml")" = 1 ]
+sed -n '/username="jefe"/,/<\/userRoles>/p' "$r/roles.xml" | grep -q 'roleID="GROUP_ADMIN"'
+EOF
+
 docker run -d --name "${NAME}" -p "${PORT}:8080" \
     -e GEOSERVER_ADMIN_PASSWORD=smoke-test -e GEOSERVER_CONTEXT="${CTX}" "${IMAGE}" >/dev/null
 
